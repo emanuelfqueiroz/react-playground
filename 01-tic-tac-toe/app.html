@@ -27,32 +27,24 @@
       <div className="square" onClick={squareClick}>{data}</div>
     );
   }
-  function Board({ squares, updateBoard, player }) {
-    let status = null;
-    const winner = calculateWinner(squares);
-    if (winner) {
-      status = 'Winner: ' + winner;
-    } else {
-      status = 'Player: ' + player;
-    }
+  function BoardComponent({ squares, updateBoardFunc, player }) {
 
     function squareClick(index) {
-      if (winner != null) return;
       const nsquares = squares.slice();
       nsquares[index] = getPlayerMark(player);
-      updateBoard(nsquares, winner);
+      updateBoardFunc(nsquares);
     }
     function getPlayerMark(player) {
       return player;
     }
-    let gameOverContent;
-    if (winner) {
-      gameOverContent = <h5> Game Over </h5>
-    }
+    // let gameOverContent;
+    // if (winner) {
+    //   gameOverContent = <h5> Game Over </h5>
+    // }
 
     return (
       <>
-        <h3>{status}</h3>
+
         <div className="board-row">
           <Square data={squares[0]} squareClick={() => squareClick(0)} />
           <Square data={squares[1]} squareClick={() => squareClick(1)} />
@@ -68,44 +60,81 @@
           <Square data={squares[7]} squareClick={() => squareClick(7)} />
           <Square data={squares[8]} squareClick={() => squareClick(8)} />
         </div>
-        <div>{gameOverContent}</div>
+
+      </>
+    );
+  }
+  function HeaderComponent({player, winner}){
+    let content ;
+    if(winner)  content = <h3>Winner: {winner}</h3>
+    return (
+      <>
+      <h3>Player: {player}</h3>
+      {content}
       </>
     );
   }
   function getPlayers() {
     return ["X", "O"];
   }
-  function getInitialSquares()
-  {
+  function getInitialSquares() {
     return Array(9).fill('');
   }
+  function GameOverComponent({ winner, resetGameFunc }) {
+    if (winner == null) return (<></>);
+    return (
+      <>
+        <h5>Game Over</h5>
+        <button onClick={resetGameFunc}> Reset Game </button>
+      </>
+    );
+  }
+  function GameState(squares, player, winner) {
+    return {
+      squares: squares,
+      player: player,
+      winner: winner
+    };
+  }
+  function getInitialGameState() {
+    return GameState(getInitialSquares(), getNextPlayer(), null)
+  }
+  function getNextPlayer(currentPlayer = null) {
+    return getPlayers().find(p => p != currentPlayer);
+  }
+  let App = function GameApp() {
+    const [game, setGameState] = useState(getInitialGameState());
+    function resetGame() {
+      setGameState(getInitialGameState())
+    }
+    let header = null;
+    let gameOverContent = null;
+    if (game.winner) {
+      header = 'Winner: ' + game.winner;
+      gameOverContent = <div>Game Over</div>
+    } else {
+      header = 'Player: ' + game.player;
+    }
+
+    function updateBoard(squares) {
+      var newState = {
+        squares : squares, 
+        player  : getNextPlayer(game.player), 
+        winner  : calculateWinner(squares)
+      };
+      setGameState(newState);
+    }
 
 
-  let App = function Game() {
-    const [squares, setSquare] = useState(getInitialSquares);
-    const [player, setPlayer] = useState(nextPlayer);
-    const [winner, setWinner] = useState(null);
-    
-    function updateBoard(squares, winner) {
-      setSquare(squares);
-      setPlayer(nextPlayer(player));
-      setWinner(winner);
-    }
-    function nextPlayer(currentPlayer = null) {
-      return "X";
-      // return getPlayers().find(p => p != currentPlayer);
-    }
-    function resetGame(){
-
-    }
 
     return (
       <div className="game">
         <h1>Tic Tac Toe</h1>
+
         <div className="game-board">
-          {winner}
-          <Board squares={squares} updateBoard={updateBoard} player={player} />
-          <button onClick={resetGame} > Reset Game </button>
+          <HeaderComponent winner={game.winner} player = {game.player} />
+          <BoardComponent squares={game.squares} updateBoardFunc={updateBoard} player={game.player} />
+          <GameOverComponent winner={game.winner} resetGameFunc={resetGame} />
         </div>
       </div>
     );
