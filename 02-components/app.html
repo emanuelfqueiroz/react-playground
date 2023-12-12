@@ -1,0 +1,156 @@
+<html>
+
+<head>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+    crossorigin="anonymous"></script>
+</head>
+
+<body>
+  <div id="root"></div>
+</body>
+
+</html>
+
+
+<!-- This setup is not suitable for production. -->
+<!-- Only use it in development! -->
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script async src="https://ga.jspm.io/npm:es-module-shims@1.7.0/dist/es-module-shims.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react?dev",
+    "react-dom/client": "https://esm.sh/react-dom/client?dev"
+  }
+}
+</script>
+<script type="text/babel" data-type="module">
+  import React, { StrictMode } from 'react';
+  import { createRoot } from 'react-dom/client';
+  import { useState } from 'react';
+
+  const root = createRoot(document.getElementById('root'))
+
+  var products = [
+    { name: "Apple", category: "Fruits", price: 1.0, stocked: true },
+    { name: "DragonFruit", category: "Fruits", price: 1.10, stocked: true },
+    { name: "PassionFruit", category: "Fruits", price: 2, stocked: false },
+    { name: "Spinach", category: "Vegetable", price: 2, stocked: true },
+    { name: "Pumpkin", category: "Vegetable", price: 4, stocked: false },
+    { name: "Peas", category: "Vegetable", price: 1, stocked: true }
+  ]
+
+  function dump(obj) {
+    var out = '';
+    for (var i in obj) {
+      out += i + ": " + obj[i] + "\n";
+    }
+
+    console.log('----dump -----<br/>' + out);
+  }
+
+  function ProductCategoryRow({ category }) {
+    return (
+      <tr>
+        <th colSpan="2">{category}</th>
+      </tr>
+    );
+  }
+  function ProductRow({ product }) {
+    const name = product.stocked ? product.name :
+      <span style={{ color: 'red' }}>
+        {product.name}
+      </span>;
+    return (
+      <tr scope="row" key={"tr" + product.name}>
+        <td>{name}</td>
+        <td>{product.price}</td>
+      </tr>
+    )
+  }
+
+  function ProductTable({ products, filterText, inStockOnly }) {
+    const rows = [];
+    let lastCategory = null;
+    if(inStockOnly){
+      products = products
+        .filter(p => p.stocked == inStockOnly);
+    }
+    if(filterText.length >0)
+    {
+      products = products
+        .filter(p => p.name.toLowerCase().indexOf(
+          filterText.toLowerCase()) >=0 );
+    }
+    products.forEach((product) => {
+      if (product.category != lastCategory) {
+        rows.push(
+          <ProductCategoryRow key={product.category} category={product.category} />
+        );
+      }
+      rows.push(
+        <ProductRow key={product.name} product={product} />
+      );
+      lastCategory = product.category;
+    });
+
+    return (
+      <table key="products-table-t" class="table">
+        <thead>
+          <tr scope="col" key="products-head">
+            <th key="product-head-name">Name</th>
+            <th key="product-head-price">Price</th>
+          </tr>
+        </thead>
+        <tbody key="products-body">{rows}</tbody>
+      </table>
+    )
+  }
+  function SearchBar({filterText, inStockOnly, onFilterTextChange, onInStockOnlyChange}) {
+
+    return (<form>
+      <input type="text" placeholder="Search..." value={filterText} onChange={(e) => onFilterTextChange(e.target.value)} />
+      <label >
+        <input type="checkbox" checked={inStockOnly} onChange={(e) => onInStockOnlyChange(e.target.checked)}/>
+        {' '}
+        Only show products in stock
+      </label>
+    </form>);
+  }
+
+  function FilterableProductTable({ products }) {
+    const [filterText, setFilterText] = useState('');
+    const [inStockOnly, setInStockOnly] = useState(false);
+
+    return (<>
+      <SearchBar 
+        filterText={filterText} 
+        inStockOnly={inStockOnly} 
+        onFilterTextChange={setFilterText} 
+        onInStockOnlyChange={setInStockOnly}
+         />
+      <ProductTable 
+        products={products} 
+        filterText={filterText} 
+        inStockOnly={inStockOnly} />
+
+    </>);
+  }
+
+
+  root.render(
+    <StrictMode>
+      <h1>Product List</h1>
+      <FilterableProductTable products={products} />
+    </StrictMode>
+  )
+
+</script>
+<style>
+
+</style>
+
+</html>
